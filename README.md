@@ -10,7 +10,7 @@ Designed as a modern reference project combining application development with cl
 
 # Simple Calculator Application
 
-![Calculator Application UI](app-ui.png)
+![Calculator Application UI](calculator-app/app-ui.png)
 
 A robust full-stack calculator app featuring a **React** frontend, **Flask** backend, **MySQL** database, and **Nginx** reverse proxy. Designed for seamless local development—no Docker or Kubernetes required. Supports basic arithmetic, persistent history, dark/light theme, and easy Nginx proxy setup.
 
