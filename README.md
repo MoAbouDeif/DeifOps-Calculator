@@ -4,6 +4,6 @@
 
 * **CI/CD pipelines** for automated build, test, and deployment
 * **Infrastructure as Code (IaC)** with Terraform to provision an **EKS (Elastic Kubernetes Service) cluster**
-* **Helm charts** for Kubernetes application deployment and management
+* **Helm charts** for EKS ELB-Ingress-Clontroller and Application deployment and management
 
 Designed as a modern reference project combining application development with cloud-native infrastructure and DevOps best practices.
