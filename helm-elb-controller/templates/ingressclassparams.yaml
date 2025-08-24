@@ -1,0 +1,20 @@
+{{- if and .Values.ingressClass.create .Values.ingressClass.params.create }}
+apiVersion: elbv2.k8s.aws/v1beta1
+kind: IngressClassParams
+metadata:
+  name: {{ .Values.ingressClass.params.name }}
+spec:
+  scheme: {{ .Values.ingressClass.params.scheme }}
+  ipAddressType: {{ .Values.ingressClass.params.ipAddressType }}
+  ingressClass: {{ .Values.ingressClass.name }}
+  loadBalancerAttributes:
+  {{- range $k, $v := .Values.ingressClass.params.loadBalancerAttributes }}
+    - key: {{ $k | quote }}
+      value: {{ $v | quote }}
+  {{- end }}
+  # Target type default for all TargetGroupBindings created by this class
+  group:
+    name: default
+  # Target type (ip/instance)
+  targetType: {{ .Values.ingressClass.params.targetType }}
+{{- end }}
