@@ -17,7 +17,3 @@ output "kubeconfig_apply" {
 output "hosted_zone_arn" {
   value = data.aws_route53_zone.selected.arn
 }
-
-data "aws_eks_cluster_auth" "token" {
-  name = module.eks.cluster_name
-}

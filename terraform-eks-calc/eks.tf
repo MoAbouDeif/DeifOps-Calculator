@@ -1,7 +1,11 @@
+###############################################################################
+# EKS module (unchanged)
+###############################################################################
 module "eks" {
   source  = "terraform-aws-modules/eks/aws"
   version = "~> 21.0"
 
+  depends_on = [ module.vpc ]
   name               = "${terraform.workspace}-${var.cluster_name}"
   kubernetes_version = var.cluster_version
 
@@ -14,7 +18,6 @@ module "eks" {
     vpc-cni = {
       before_compute = true
     }
-
   }
 
   endpoint_public_access                   = true
@@ -30,6 +33,9 @@ module "eks" {
   tags = local.tags
 }
 
+###############################################################################
+# EBS CSI IRSA (unchanged)
+###############################################################################
 module "ebs_csi_irsa" {
   source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts"
   version = "~> 6.0"
@@ -57,22 +63,28 @@ resource "aws_eks_addon" "ebs_csi" {
   service_account_role_arn = module.ebs_csi_irsa.arn
 }
 
+###############################################################################
+# cert-manager IRSA — FIXED namespace:serviceAccount strings (use hyphens)
+###############################################################################
 module "cert_manager_irsa" {
   source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts"
   version = "~> 6.0"
   name    = "cert_manager"
 
+  # This flag (module option) should attach a policy that allows Route53 changes.
   attach_cert_manager_policy    = true
   cert_manager_hosted_zone_arns = [data.aws_route53_zone.selected.arn]
 
   oidc_providers = {
     oidc = {
       provider_arn = module.eks.oidc_provider_arn
+
+      # *** corrected values: namespace and service account names use hyphen ***
       namespace_service_accounts = [
-        "cert_manager:cert_manager",
-        "cert_manager:cert_manager-cainjector",
-        "cert_manager:cert_manager-webhook",
-        "cert_manager:default"
+        "cert-manager:cert-manager",
+        "cert-manager:cert-manager-cainjector",
+        "cert-manager:cert-manager-webhook",
+        "cert-manager:default"
       ]
     }
   }
@@ -87,6 +99,41 @@ resource "aws_eks_addon" "cert_manager" {
   service_account_role_arn = module.cert_manager_irsa.arn
 }
 
+resource "kubernetes_manifest" "cert_manager_webhook_ready" {
+  manifest = {
+    "apiVersion" = "v1"
+    "kind"       = "Pod"
+    "metadata" = {
+      "name"      = "cert-manager-webhook-probe"
+      "namespace" = "cert-manager"
+    }
+    "spec" = {
+      "containers" = [
+        {
+          "name"    = "curl"
+          "image"   = "curlimages/curl:8.7.1"
+          "command" = ["sh", "-c", "until curl -k https://cert-manager-webhook.cert-manager.svc/healthz; do echo waiting; sleep 5; done; sleep 10"]
+        }
+      ]
+      "restartPolicy" = "Never"
+    }
+  }
+
+  wait_for = {
+    "condition" = [
+      {
+        type   = "Succeeded"
+        status = "True"
+      }
+    ]
+  }
+
+  depends_on = [aws_eks_addon.cert_manager]
+}
+
+###############################################################################
+# external-dns IRSA — FIXED namespace:serviceAccount strings (use hyphens)
+###############################################################################
 module "external_dns_irsa" {
   source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts"
   version = "~> 6.0"
@@ -98,9 +145,10 @@ module "external_dns_irsa" {
   oidc_providers = {
     oidc = {
       provider_arn = module.eks.oidc_provider_arn
+      # corrected values:
       namespace_service_accounts = [
-        "external_dns:external_dns",
-        "external_dns:default"
+        "external-dns:external-dns",
+        "external-dns:default"
       ]
     }
   }
@@ -115,6 +163,9 @@ resource "aws_eks_addon" "external_dns" {
   service_account_role_arn = module.external_dns_irsa.arn
 }
 
+###############################################################################
+# Load Balancer Controller IRSA — normalize SA mapping
+###############################################################################
 module "load_balancer_controller_irsa" {
   source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts"
   version = "~> 6.0"
@@ -125,12 +176,97 @@ module "load_balancer_controller_irsa" {
   oidc_providers = {
     oidc = {
       provider_arn = module.eks.oidc_provider_arn
+      # controller uses namespace "aws-load-balancer-controller" and SA "aws-load-balancer-controller"
       namespace_service_accounts = [
-        "aws-load-balancer-controller:aws-load-balancer-controller",
-        "aws-load-balancer-controller:default"
+        "aws-load-balancer-controller:aws-load-balancer-controller"
       ]
     }
   }
 
   tags = local.tags
+}
+
+###############################################################################
+# K8s namespace + SA (Terraform-managed) - keep these if you prefer TF ownership
+###############################################################################
+resource "kubernetes_namespace" "aws_load_balancer_controller" {
+  metadata {
+    name = "aws-load-balancer-controller"
+  }
+}
+
+resource "kubernetes_service_account" "aws_load_balancer_controller" {
+  metadata {
+    name      = "aws-load-balancer-controller"
+    namespace = kubernetes_namespace.aws_load_balancer_controller.metadata[0].name
+    annotations = {
+      "eks.amazonaws.com/role-arn" = module.load_balancer_controller_irsa.arn
+    }
+  }
+}
+
+###############################################################################
+# Helm release for aws-load-balancer-controller (serviceAccount.create=false)
+###############################################################################
+resource "helm_release" "aws_load_balancer_controller" {
+  name       = "aws-load-balancer-controller"
+  namespace  = "aws-load-balancer-controller"
+  repository = "https://aws.github.io/eks-charts"
+  chart      = "aws-load-balancer-controller"
+  version    = "1.8.1"
+
+  set = [
+    { name = "clusterSecretsPermissions.allowAllSecrets" , value = "true" },
+    { name = "enableCertManager", value = "true" },
+    { name = "vpcId", value = module.vpc.vpc_id },
+    { name = "region", value = var.aws_region },
+    { name = "clusterName", value = module.eks.cluster_name },
+    { name = "serviceAccount.create", value = "false" },
+    { name = "serviceAccount.name", value = "aws-load-balancer-controller" },
+    { name = "serviceAccount.annotations.eks\\.amazonaws\\.com/role-arn", value = module.load_balancer_controller_irsa.arn }
+  ]
+
+  depends_on = [
+    module.eks,
+    module.load_balancer_controller_irsa,
+    kubernetes_service_account.aws_load_balancer_controller,
+    kubernetes_cluster_role.alb_leases,
+    kubernetes_cluster_role_binding.alb_leases_binding,
+    kubernetes_manifest.cert_manager_webhook_ready
+  ]
+}
+
+###############################################################################
+# Small ClusterRole + Binding for leases (leader election) — minimal and additive
+# (You already added this; keeping it here)
+###############################################################################
+resource "kubernetes_cluster_role" "alb_leases" {
+  metadata { name = "alb-leases" }
+
+  rule {
+    api_groups = ["coordination.k8s.io"]
+    resources  = ["leases"]
+    verbs      = ["get", "watch", "list", "create", "update", "patch"]
+  }
+}
+
+resource "kubernetes_cluster_role_binding" "alb_leases_binding" {
+  metadata { name = "alb-leases-binding" }
+
+  role_ref {
+    api_group = "rbac.authorization.k8s.io"
+    kind      = "ClusterRole"
+    name      = kubernetes_cluster_role.alb_leases.metadata[0].name
+  }
+
+  subject {
+    kind      = "ServiceAccount"
+    name      = kubernetes_service_account.aws_load_balancer_controller.metadata[0].name
+    namespace = kubernetes_namespace.aws_load_balancer_controller.metadata[0].name
+  }
+
+  depends_on = [
+    kubernetes_namespace.aws_load_balancer_controller,
+    kubernetes_service_account.aws_load_balancer_controller
+  ]
 }
