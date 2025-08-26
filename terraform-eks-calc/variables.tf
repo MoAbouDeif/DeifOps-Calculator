@@ -13,17 +13,6 @@ variable "cluster_version" {
   default = "1.33"
 }
 
-variable "compute_config" {
-  type = object({
-    enabled    = bool
-    node_pools = list(string)
-  })
-  default = {
-    enabled    = true
-    node_pools = ["general-purpose"]
-  }
-}
-
 variable "vpc_cidr" {
   type    = string
   default = "10.0.0.0/16"
@@ -59,11 +48,11 @@ variable "eks_managed_node_groups" {
   default = {
     "calculator_app" = {
       ami_type       = "AL2023_x86_64_STANDARD"
-      instance_types = ["t2.micro"]
+      instance_types = ["t3.large"]
 
       min_size     = 1
-      max_size     = 10
-      desired_size = 2
+      max_size     = 6
+      desired_size = 3
     }
   }
 }

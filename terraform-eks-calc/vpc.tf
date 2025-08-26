@@ -14,12 +14,12 @@ module "vpc" {
 
   tags = local.tags
   private_subnet_tags = {
-    "kubernetes.io/cluster/dev-eks-cluster"   = "shared"
-    "kubernetes.io/role/internal-elb"     = "1"
+    "kubernetes.io/cluster/dev-eks-cluster" = "shared"
+    "kubernetes.io/role/internal-elb"       = "1"
   }
 
   public_subnet_tags = {
     "kubernetes.io/cluster/dev-eks-cluster" = "shared"
-    "kubernetes.io/role/elb" = "1"
+    "kubernetes.io/role/elb"                = "1"
   }
 }
