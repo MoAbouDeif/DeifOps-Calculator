@@ -7,13 +7,6 @@ data "aws_route53_zone" "selected" {
   private_zone = false
 }
 
-
 data "aws_eks_cluster_auth" "token" {
- name = module.eks.cluster_name 
-  region = var.aws_region
-}
-
-data "aws_eks_cluster" "eks" {
   name = module.eks.cluster_name
-  region = var.aws_region
 }
