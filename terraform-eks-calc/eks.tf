@@ -1,5 +1,5 @@
 ###############################################################################
-# EKS module (unchanged)
+# EKS module
 ###############################################################################
 module "eks" {
   source  = "terraform-aws-modules/eks/aws"
@@ -17,6 +17,13 @@ module "eks" {
     vpc-cni = {
       before_compute = true
     }
+    metrics-server = {}
+    aws-ebs-csi-driver = {}
+    external-dns = {
+      name = "external-dns"
+      service_account_role_arn = module.external_dns_irsa.arn
+    }
+
   }
 
   endpoint_public_access                   = true
@@ -39,7 +46,6 @@ module "karpenter" {
 
   cluster_name = module.eks.cluster_name
 
-  # Attach additional IAM policies to the Karpenter node IAM role
   node_iam_role_additional_policies = {
     AmazonSSMManagedInstanceCore = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
   }
@@ -51,15 +57,15 @@ module "karpenter" {
 }
 
 ###############################################################################
-# aws-load-balancer-controller and IRSA
+# aws-load-balancer-controller with IRSA
 ###############################################################################
 module "aws_load_balancer_controller_irsa" {
   source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts"
   version = "~> 6.0"
-  name    = "cert_manager"
+  name    = "aws-load-balancer-controller"
 
-  attach_load_balancer_controller_policy    = true
-  cert_manager_hosted_zone_arns = [data.aws_route53_zone.selected.arn]
+  attach_load_balancer_controller_policy = true
+  cert_manager_hosted_zone_arns          = [data.aws_route53_zone.selected.arn]
 
   oidc_providers = {
     oidc = {
@@ -75,19 +81,23 @@ resource "helm_release" "aws_load_balancer_controller" {
   chart = "aws-load-balancer-controller"
   name  = "aws-load-balancer-controller"
 
-  lint = true
-  namespace = "aws-load-balancer-controller"
-  repository = "https://aws.github.io/eks-charts"
-  version = "1.13.4"
+  lint             = true
+  namespace        = "aws-load-balancer-controller"
+  repository       = "https://aws.github.io/eks-charts"
+  version          = "1.13.4"
   create_namespace = true
-  depends_on = [module.aws_load_balancer_controller_irsa]
+  depends_on       = [
+    module.aws_load_balancer_controller_irsa,
+    module.eks.eks_managed_node_groups,
+    helm_release.cert_manager_controller
+    ]
   set = [
     {
-      name = "serviceAccount.create"
+      name  = "serviceAccount.create"
       value = "true"
     },
     {
-      name = "serviceAccount.name"
+      name  = "serviceAccount.name"
       value = "aws-load-balancer-controller"
     },
     {
@@ -95,21 +105,29 @@ resource "helm_release" "aws_load_balancer_controller" {
       value = "${module.aws_load_balancer_controller_irsa.arn}"
     },
     {
-      name = "vpcId"
+      name  = "vpcId"
       value = module.vpc.vpc_id
     },
     {
-      name = "region"
+      name  = "region"
       value = var.aws_region
     },
     {
-      name = "clusterName"
+      name  = "clusterName"
       value = module.eks.cluster_name
     },
     {
-      name = "replicaCount"
+      name  = "replicaCount"
       value = "2"
     },
+    {
+      name = "enableCertManager"
+      value = true
+    },
+    {
+      name = "clusterSecretsPermissions.allowAllSecrets"
+      value = true
+    }
   ]
 }
 
@@ -119,7 +137,7 @@ resource "helm_release" "aws_load_balancer_controller" {
 module "cert_manager_irsa" {
   source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts"
   version = "~> 6.0"
-  name    = "cert_manager"
+  name    = "cert-manager"
 
   attach_cert_manager_policy    = true
   cert_manager_hosted_zone_arns = [data.aws_route53_zone.selected.arn]
@@ -128,9 +146,9 @@ module "cert_manager_irsa" {
     oidc = {
       provider_arn = module.eks.oidc_provider_arn
       namespace_service_accounts = [
-        "kube-system:cert-manager",
-        "kube-system:cert-manager-cainjector",
-        "kube-system:cert-manager-webhook"
+        "cert-manager:cert-manager",
+        "cert-manager:cert-manager-cainjector",
+        "cert-manager:cert-manager-webhook"
       ]
     }
   }
@@ -138,7 +156,34 @@ module "cert_manager_irsa" {
   tags = local.tags
 }
 
+resource "helm_release" "cert_manager_controller" {
+  chart = "cert-manager"
+  name  = "cert-manager"
 
+  namespace = "cert-manager"
+  create_namespace = true
+  lint             = true
+  repository       = "https://charts.jetstack.io"
+  version          = "1.18.2"
+  depends_on       = [
+    module.cert_manager_irsa,
+    module.eks.eks_managed_node_groups
+    ]
+  set = [
+    {
+      name  = "serviceAccount.create"
+      value = "true"
+    },
+    {
+      name  = "cainjector.serviceAccount.annotations.eks\\.amazonaws\\.com/role-arn"
+      value = "${module.cert_manager_irsa.arn}"
+    },
+    {
+      name = "installCRDs"
+      value = "true"
+    },
+  ]
+}
 
 ###############################################################################
 # external-dns IRSA
@@ -146,7 +191,7 @@ module "cert_manager_irsa" {
 module "external_dns_irsa" {
   source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts"
   version = "~> 6.0"
-  name    = "external_dns"
+  name    = "external-dns"
 
   attach_external_dns_policy    = true
   external_dns_hosted_zone_arns = [data.aws_route53_zone.selected.arn]
