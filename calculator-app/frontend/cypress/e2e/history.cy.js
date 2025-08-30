@@ -1,6 +1,6 @@
 describe('History E2E', () => {
   it('loads and displays calculation history from backend', () => {
-    cy.visit('/history');
+    cy.visit('/'); // Visit the app's main page
 
     cy.get('[data-testid="history-list"]').should('exist');
     cy.get('[data-testid="history-item"]').should('have.length.greaterThan', 0);
@@ -13,7 +13,7 @@ describe('History E2E', () => {
       body: { error: 'Server error' },
     }).as('historyFail');
 
-    cy.visit('/history');
+    cy.visit('/'); // Visit the app's main page
 
     cy.wait('@historyFail');
     cy.get('[data-testid="history-error"]').should('contain.text', 'Server error');

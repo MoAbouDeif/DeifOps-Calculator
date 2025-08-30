@@ -5,7 +5,7 @@ module "eks" {
   source  = "terraform-aws-modules/eks/aws"
   version = "~> 21.0"
 
-  name               = "${terraform.workspace}-${var.cluster_name}"
+  name               = local.cluster_name
   kubernetes_version = var.cluster_version
 
   addons = {
@@ -17,11 +17,25 @@ module "eks" {
     vpc-cni = {
       before_compute = true
     }
-    metrics-server = {}
-    aws-ebs-csi-driver = {}
+    aws-ebs-csi-driver = {
+      name                     = "aws-ebs-csi-driver"
+      service_account_role_arn = module.aws_ebs_csi_driver_irsa.arn
+    }
+    aws-efs-csi-driver = {
+      name                     = "aws-efs-csi-driver"
+      service_account_role_arn = module.aws_efs_csi_driver_irsa.arn
+    }
+    # aws-mountpoint-s3-csi-driver = {
+    #   name                     = "aws-mountpoint-s3-csi-driver"
+    #   service_account_role_arn = module.aws_mountpoint_s3_csi_driver_irsa.arn
+    # }
     external-dns = {
-      name = "external-dns"
+      name                     = "external-dns"
       service_account_role_arn = module.external_dns_irsa.arn
+    }
+    amazon-cloudwatch-observability = {
+      name                     = "amazon-cloudwatch-observability"
+      service_account_role_arn = module.cloudwatch_agent_irsa.arn
     }
 
   }
@@ -36,7 +50,7 @@ module "eks" {
 
 
 
-  eks_managed_node_groups = var.eks_managed_node_groups
+  eks_managed_node_groups =  var.eks_managed_node_groups
 
   tags = local.tags
 }
@@ -50,11 +64,70 @@ module "karpenter" {
     AmazonSSMManagedInstanceCore = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
   }
 
-  tags = {
-    Environment = "dev"
-    Terraform   = "true"
+  tags = local.tags
+}
+
+###############################################################################
+# aws-ebs-csi-driver IRSA
+###############################################################################
+module "aws_ebs_csi_driver_irsa" {
+  source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts"
+  version = "~> 6.0"
+  name    = "aws-ebs-csi-driver"
+
+  attach_ebs_csi_policy = true
+
+  oidc_providers = {
+    oidc = {
+      provider_arn = module.eks.oidc_provider_arn
+      namespace_service_accounts = [
+        "kube-system:ebs-csi-controller-sa",
+        "kube-system:ebs-csi-node-sa"
+      ]
+    }
   }
 }
+
+###############################################################################
+# aws-efs-csi-driver IRSA
+###############################################################################
+module "aws_efs_csi_driver_irsa" {
+  source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts"
+  version = "~> 6.0"
+  name    = "aws-efs-csi-driver"
+
+  attach_efs_csi_policy = true
+
+  oidc_providers = {
+    oidc = {
+      provider_arn = module.eks.oidc_provider_arn
+      namespace_service_accounts = [
+        "kube-system:efs-csi-controller-sa",
+        "kube-system:efs-csi-node-sa"
+      ]
+    }
+  }
+}
+
+###############################################################################
+# aws-mountpoint-s3-csi-driver IRSA
+###############################################################################
+# module "aws_mountpoint_s3_csi_driver_irsa" {
+#   source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts"
+#   version = "~> 6.0"
+#   name    = "aws-mountpoint-s3-csi-driver"
+
+#   attach_mountpoint_s3_csi_policy = true
+
+#   oidc_providers = {
+#     oidc = {
+#       provider_arn = module.eks.oidc_provider_arn
+#       namespace_service_accounts = [
+#         "kube-system:aws-mountpoint-s3-csi-driver-sa"
+#       ]
+#     }
+#   }
+# }
 
 ###############################################################################
 # aws-load-balancer-controller with IRSA
@@ -86,11 +159,11 @@ resource "helm_release" "aws_load_balancer_controller" {
   repository       = "https://aws.github.io/eks-charts"
   version          = "1.13.4"
   create_namespace = true
-  depends_on       = [
+  depends_on = [
     module.aws_load_balancer_controller_irsa,
     module.eks.eks_managed_node_groups,
     helm_release.cert_manager_controller
-    ]
+  ]
   set = [
     {
       name  = "serviceAccount.create"
@@ -121,18 +194,18 @@ resource "helm_release" "aws_load_balancer_controller" {
       value = "2"
     },
     {
-      name = "enableCertManager"
+      name  = "enableCertManager"
       value = true
     },
     {
-      name = "clusterSecretsPermissions.allowAllSecrets"
+      name  = "clusterSecretsPermissions.allowAllSecrets"
       value = true
     }
   ]
 }
 
 ###############################################################################
-# cert-manager IRSA
+# cert-manager and IRSA
 ###############################################################################
 module "cert_manager_irsa" {
   source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts"
@@ -160,15 +233,15 @@ resource "helm_release" "cert_manager_controller" {
   chart = "cert-manager"
   name  = "cert-manager"
 
-  namespace = "cert-manager"
+  namespace        = "cert-manager"
   create_namespace = true
   lint             = true
   repository       = "https://charts.jetstack.io"
   version          = "1.18.2"
-  depends_on       = [
+  depends_on = [
     module.cert_manager_irsa,
     module.eks.eks_managed_node_groups
-    ]
+  ]
   set = [
     {
       name  = "serviceAccount.create"
@@ -179,7 +252,7 @@ resource "helm_release" "cert_manager_controller" {
       value = "${module.cert_manager_irsa.arn}"
     },
     {
-      name = "installCRDs"
+      name  = "installCRDs"
       value = "true"
     },
   ]
@@ -201,6 +274,53 @@ module "external_dns_irsa" {
       provider_arn = module.eks.oidc_provider_arn
       namespace_service_accounts = [
         "external-dns:external-dns"
+      ]
+    }
+  }
+
+  tags = local.tags
+}
+
+###############################################################################
+# amazon-cloudwatch-observability IRSA
+###############################################################################
+module "cloudwatch_agent_irsa" {
+  source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts"
+  version = "~> 6.0"
+  name    = "cloudwatch-agent-irsa"
+
+  attach_cloudwatch_observability_policy = true
+
+  oidc_providers = {
+    oidc = {
+      provider_arn = module.eks.oidc_provider_arn
+      namespace_service_accounts = [
+        "amazon-cloudwatch:amazon-cloudwatch-observability-controller-manager",
+        "amazon-cloudwatch:cloudwatch-agent",
+        "amazon-cloudwatch:neuron-monitor-service-acct",
+        "amazon-cloudwatch:dcgm-exporter-service-acct"
+      ]
+    }
+  }
+
+  tags = local.tags
+}
+
+###############################################################################
+# vpc-cni IRSA
+###############################################################################
+module "vpc_cni_irsa" {
+  source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts"
+  version = "~> 6.0"
+  name    = "vpc-cni-irsa"
+
+  attach_vpc_cni_policy = true
+
+  oidc_providers = {
+    oidc = {
+      provider_arn = module.eks.oidc_provider_arn
+      namespace_service_accounts = [
+        "kube-system:vpc-cni"
       ]
     }
   }

@@ -17,21 +17,41 @@ variable "vpc_cidr" {
   type    = string
   default = "10.0.0.0/16"
 }
-
-variable "public_subnets" {
-  type    = list(string)
-  default = ["10.0.1.0/24", "10.0.2.0/24", "10.0.3.0/24"]
+variable "subnets_prefix" {
+  type    = number
+  default = 24
+  validation {
+    condition     = var.subnets_prefix > tonumber(split("/", var.vpc_cidr)[1])
+    error_message = "subnets_prefix must be greater than the VPC CIDR prefix."
+  }
 }
 
-variable "private_subnets" {
-  type    = list(string)
-  default = ["10.0.11.0/24", "10.0.12.0/24", "10.0.13.0/24", "10.0.14.0/24", "10.0.15.0/24", "10.0.16.0/24"]
+variable "public_subnets_count" {
+  type    = number
+  default = 3
+  validation {
+    condition     = var.public_subnets_count <= (pow(2, (32 - (tonumber(split("/", var.vpc_cidr)[1])) - (32 - var.subnets_prefix))))
+    error_message = "too many public subnets for the given VPC CIDR and subnet prefix."
+  }
+}
+
+variable "private_subnets_count" {
+  type    = number
+  default = 6
+  validation {
+    condition     = var.private_subnets_count <= ((pow(2, (32 - (tonumber(split("/", var.vpc_cidr)[1])) - (32 - var.subnets_prefix)))) - var.public_subnets_count)
+    error_message = "too many private subnets for the given VPC CIDR and subnet prefix."
+  }
 }
 
 variable "tags" {
   type = map(string)
   default = {
     Terraform = "true"
+    Project   = "EKS Cluster"
+    Owner     = "Mohamed Abou Deif"
+    Contact   = "Mohamed.AbouDeif@outlook.com"
+    CostCenter = "12345"
   }
 }
 
@@ -46,7 +66,7 @@ variable "eks_managed_node_groups" {
   }))
 
   default = {
-    "calculator_app" = {
+    "calc_node_group" = {
       ami_type       = "AL2023_x86_64_STANDARD"
       instance_types = ["m5.xlarge"]
 
