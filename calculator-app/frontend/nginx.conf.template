@@ -4,6 +4,14 @@ server {
 
     root /usr/share/nginx/html;
     index index.html; 
+
+    location /healz/ {
+        return 200;
+    }
+
+    location /probe/ {
+        return 200;
+    }  
                    
     
     location /api/ {
@@ -13,7 +21,7 @@ server {
 
 
         if ($request_method = 'OPTIONS') {
-            add_header 'Access-Control-Allow-Origin' '*';
+            add_header 'Access-Control-Allow-Origin' 'http://${SERVER_NAME}';
             add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS';
             add_header 'Access-Control-Allow-Headers' 'Content-Type';
             add_header 'Access-Control-Allow-Credentials' 'true';
@@ -23,7 +31,18 @@ server {
     }
 }
 server {
-    listen 80;
+    listen 80 default_server;
     server_name _;
-    return 403; 
+    
+    location /healz/ {
+        return 200;
+    }
+
+    location /probe/ {
+        return 200;
+    }  
+    
+    location / {
+        return 401;
+    }  
 }
