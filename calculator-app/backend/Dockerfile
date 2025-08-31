@@ -3,9 +3,9 @@ FROM python:3.13.7-slim
 # Set environment variables for Python and MySQL
 ENV PYTHONDONTWRITEBYTECODE=1 \
   PYTHONUNBUFFERED=1 \
-  MYSQL_HOST=localhost \
-  MYSQL_DB=calc_db \
-  MYSQL_USER=calc_user \
+  MYSQL_HOST= \
+  MYSQL_DB= \
+  MYSQL_USER= \
   MYSQL_PASSWORD=
 
 WORKDIR /app

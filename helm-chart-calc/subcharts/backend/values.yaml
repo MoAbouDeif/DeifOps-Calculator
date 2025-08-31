@@ -15,9 +15,20 @@ image:
 
 # This is for the secrets for pulling an image from a private repository more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
 imagePullSecrets: []
+
+env:
+  - name: MYSQL_HOST
+    value: mysql
+  - name: MYSQL_USER
+    value: calc_user
+  - name: MYSQL_PASSWORD
+    value: calc_password
+  - name: MYSQL_DB
+    value: calc_database
+
 # This is to override the chart name.
 nameOverride: ""
-fullnameOverride: ""
+fullnameOverride: "backend"
 
 # This section builds out the service account more information can be found here: https://kubernetes.io/docs/concepts/security/service-accounts/
 serviceAccount:

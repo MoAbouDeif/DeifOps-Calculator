@@ -1,32 +1,38 @@
 frontend:
   replicaCount: 2
   ingress:
-    enabled: true
-    className: "alb"
-    annotations: 
+    enabled: false
+    className: alb
+    annotations:
       kubernetes.io/ingress.class: alb
       alb.ingress.kubernetes.io/scheme: internet-facing
       alb.ingress.kubernetes.io/target-type: ip
-      alb.ingress.kubernetes.io/ssl-redirect: "443"
+      alb.ingress.kubernetes.io/ssl-redirect: '443'
       alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS":443}]'
       external-dns.alpha.kubernetes.io/hostname: calculator.deifops.click
-      # cert-manager.io/cluster-issuer: letsencrypt-prod
     hosts:
       - host: calculator.deifops.click
         paths:
           - path: /
             pathType: Prefix
-    tls:
-      - secretName: calculator-tls
-        hosts:
-          - calculator.deifops.click
+    tls: []
   image:
     repository: deifops/calc-frontend
     pullPolicy: IfNotPresent
-    tag: "latest"
+    tag: ''
   imagePullSecrets: []
-  nameOverride: ""
-  fullnameOverride: "frontend"
+  service:
+    type: NodePort
+    port: 80
+  env:
+    - name: SERVER_NAME
+      value: calculator.deifops.click
+    - name: BACKEND_HOST
+      value: backend
+    - name: BACKEND_PORT
+      value: "5000"
+  nameOverride: ''
+  fullnameOverride: frontend
   livenessProbe:
     httpGet:
       path: /
@@ -35,117 +41,74 @@ frontend:
     httpGet:
       path: /
       port: 80
-
 backend:
   replicaCount: 2
   image:
     repository: deifops/calc-backend
     pullPolicy: IfNotPresent
-    tag: "latest"
+    tag: ''
   imagePullSecrets: []
-  nameOverride: ""
-  fullnameOverride: ""
+  nameOverride: ''
+  fullnameOverride: backend
   service:
     type: ClusterIP
     port: 5000
   livenessProbe:
     httpGet:
       path: /
-      port: 5000 
+      port: 5000
   readinessProbe:
     httpGet:
       path: /
       port: 5000
-  envs:
+  env:
     - name: MYSQL_HOST
-      value: mysql
+      value: mysql-primary-headless
     - name: MYSQL_USER
-      valueFrom:
-        secretKeyRef:
-          name: mysql-secret
-          key: MYSQL_USER
+      value: calc_user
     - name: MYSQL_PASSWORD
       valueFrom:
         secretKeyRef:
           name: mysql-secret
-          key: MYSQL_PASSWORD
+          key: mysql-password
     - name: MYSQL_DB
-      valueFrom:
-        secretKeyRef:
-          name: mysql-secret
-          key: database
-
+      value: calc_db
 mysql:
+  fullname: ''
+  fullnameOverride: mysql
   architecture: replication
   auth:
-    rootPassword: ""
+    rootPassword: ''
     createDatabase: true
-    database: "my_database"
-    username: ""
-    password: ""
+    database: calc_db
+    username: calc_user
+    password: ''
     replicationUser: replicator
-    replicationPassword: ""
-    existingSecret: ""
+    replicationPassword: ''
+    ## @param auth.existingSecret Use existing secret for password details. The secret has to contain 
+    #  the keys `mysql-root-password`, `mysql-replication-password` and `mysql-password`
+    ## NOTE: When it's set the auth.rootPassword, auth.password, auth.replicationPassword are ignored.
+    ##
+    existingSecret: mysql-secret
   primary:
     name: primary
     persistence:
-      enabled: true
-      existingClaim: ""
-      subPath: ""
-      storageClass: ""
-      annotations: {}
+      enabled: false
+      existingClaim: ''
+      storageClass: ''
       accessModes:
         - ReadWriteOnce
       size: 8Gi
       selector: {}
-    service:
-      type: ClusterIP
-      ports:
-        mysql: 3306
-        mysqlx: 33060
-      nodePorts:
-        mysql: ""
-        mysqlx: ""
-      clusterIP: ""
-      loadBalancerIP: ""
-      externalIPs: []
-      externalTrafficPolicy: Cluster
-      loadBalancerSourceRanges: []
-      extraPorts: []
-      annotations: {}
-      sessionAffinity: None
-      sessionAffinityConfig: {}
-      headless:
-        annotations: {}
   secondary:
     name: secondary
     replicaCount: 1
     persistence:
-      enabled: true
-      existingClaim: ""
-      subPath: ""
-      storageClass: ""
-      annotations: {}
+      enabled: false
+      existingClaim: ''
+      storageClass: ''
       accessModes:
         - ReadWriteOnce
       size: 8Gi
       selector: {}
-    service:
-      type: ClusterIP
-      ports:
-        mysql: 3306
-        mysqlx: 33060
-      nodePorts:
-        mysql: ""
-        mysqlx: ""
-      clusterIP: ""
-      loadBalancerIP: ""
-      externalIPs: []
-      externalTrafficPolicy: Cluster
-      loadBalancerSourceRanges: []
-      extraPorts: []
-      annotations: {}
-      sessionAffinity: None
-      sessionAffinityConfig: {}
-      headless:
-        annotations: {}
+
