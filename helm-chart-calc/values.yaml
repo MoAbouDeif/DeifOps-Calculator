@@ -1,7 +1,7 @@
 frontend:
   replicaCount: 2
   ingress:
-    enabled: false
+    enabled: enable
     className: alb
     annotations:
       kubernetes.io/ingress.class: alb
@@ -19,7 +19,7 @@ frontend:
   image:
     repository: deifops/calc-frontend
     pullPolicy: IfNotPresent
-    tag: ''
+    tag: 1.20.0
   imagePullSecrets: []
   service:
     type: NodePort
@@ -28,28 +28,28 @@ frontend:
     - name: SERVER_NAME
       value: calculator.deifops.click
     - name: BACKEND_HOST
-      value: backend
+      value: deifops-backend
     - name: BACKEND_PORT
-      value: "5000"
+      value: '5000'
   nameOverride: ''
-  fullnameOverride: frontend
+  fullnameOverride: deifops-frontend
   livenessProbe:
     httpGet:
-      path: /
+      path: /healz/
       port: 80
   readinessProbe:
     httpGet:
-      path: /
+      path: /probe/
       port: 80
 backend:
   replicaCount: 2
   image:
     repository: deifops/calc-backend
     pullPolicy: IfNotPresent
-    tag: ''
+    tag: 1.16.0
   imagePullSecrets: []
   nameOverride: ''
-  fullnameOverride: backend
+  fullnameOverride: deifops-backend
   service:
     type: ClusterIP
     port: 5000
@@ -63,7 +63,7 @@ backend:
       port: 5000
   env:
     - name: MYSQL_HOST
-      value: mysql-primary-headless
+      value: deifops-mysql-headless
     - name: MYSQL_USER
       value: calc_user
     - name: MYSQL_PASSWORD
@@ -73,29 +73,27 @@ backend:
           key: mysql-password
     - name: MYSQL_DB
       value: calc_db
+    - name: ALLOWED_ORIGINS
+      value: 'https://calculator.deifops.click'
 mysql:
   fullname: ''
-  fullnameOverride: mysql
-  architecture: replication
+  fullnameOverride: deifops-mysql
+  architecture: standalone
   auth:
     rootPassword: ''
     createDatabase: true
     database: calc_db
     username: calc_user
     password: ''
-    replicationUser: replicator
+    replicationUser: 'replicator'
     replicationPassword: ''
-    ## @param auth.existingSecret Use existing secret for password details. The secret has to contain 
-    #  the keys `mysql-root-password`, `mysql-replication-password` and `mysql-password`
-    ## NOTE: When it's set the auth.rootPassword, auth.password, auth.replicationPassword are ignored.
-    ##
     existingSecret: mysql-secret
   primary:
     name: primary
     persistence:
-      enabled: false
+      enabled: true
       existingClaim: ''
-      storageClass: ''
+      storageClass: gp3
       accessModes:
         - ReadWriteOnce
       size: 8Gi
@@ -104,11 +102,10 @@ mysql:
     name: secondary
     replicaCount: 1
     persistence:
-      enabled: false
+      enabled: true
       existingClaim: ''
-      storageClass: ''
+      storageClass: gp3
       accessModes:
         - ReadWriteOnce
       size: 8Gi
       selector: {}
-

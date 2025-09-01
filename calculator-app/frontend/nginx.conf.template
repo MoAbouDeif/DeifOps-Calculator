@@ -4,6 +4,14 @@ server {
 
     root /usr/share/nginx/html;
     index index.html; 
+
+    location /healz/ {
+        return 200;
+    }
+
+    location /probe/ {
+        return 200;
+    }  
                    
     
     location /api/ {
@@ -23,7 +31,18 @@ server {
     }
 }
 server {
-    listen 80;
+    listen 80 default_server;
     server_name _;
-    return 403; 
+    
+    location /healz/ {
+        return 200;
+    }
+
+    location /probe/ {
+        return 200;
+    }  
+    
+    location / {
+        return 401;
+    }  
 }
