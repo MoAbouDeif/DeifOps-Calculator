@@ -1,7 +1,7 @@
 frontend:
   replicaCount: 2
   ingress:
-    enabled: enable
+    enabled: true
     className: alb
     annotations:
       kubernetes.io/ingress.class: alb
