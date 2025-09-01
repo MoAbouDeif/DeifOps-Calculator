@@ -91,7 +91,7 @@ mysql:
   primary:
     name: primary
     persistence:
-      enabled: true
+      enabled: flase
       existingClaim: ''
       storageClass: standard
       accessModes:
@@ -102,7 +102,7 @@ mysql:
     name: secondary
     replicaCount: 1
     persistence:
-      enabled: true
+      enabled: false
       existingClaim: ''
       storageClass: standard
       accessModes:
