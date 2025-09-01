@@ -78,7 +78,7 @@ backend:
 mysql:
   fullname: ''
   fullnameOverride: deifops-mysql
-  architecture: standalone
+  architecture: replication
   auth:
     rootPassword: ''
     createDatabase: true
@@ -93,7 +93,7 @@ mysql:
     persistence:
       enabled: true
       existingClaim: ''
-      storageClass: gp3
+      storageClass: standard
       accessModes:
         - ReadWriteOnce
       size: 8Gi
@@ -104,7 +104,7 @@ mysql:
     persistence:
       enabled: true
       existingClaim: ''
-      storageClass: gp3
+      storageClass: standard
       accessModes:
         - ReadWriteOnce
       size: 8Gi
