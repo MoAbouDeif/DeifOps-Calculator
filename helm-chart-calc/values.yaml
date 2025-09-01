@@ -63,7 +63,7 @@ backend:
       port: 5000
   env:
     - name: MYSQL_HOST
-      value: deifops-mysql-headless
+      value: deifops-mysql-primary-headless
     - name: MYSQL_USER
       value: calc_user
     - name: MYSQL_PASSWORD
