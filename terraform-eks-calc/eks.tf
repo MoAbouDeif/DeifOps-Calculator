@@ -70,8 +70,6 @@ module "karpenter" {
 
   cluster_name = module.eks.cluster_name
 
-  service_account_ = 
-
   node_iam_role_additional_policies = {
     AmazonSSMManagedInstanceCore = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
   }
