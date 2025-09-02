@@ -16,7 +16,7 @@ module "eks" {
     kube-proxy = {}
     vpc-cni = {
       before_compute = true
-#      service_account_role_arn = module.vpc_cni_irsa.arn
+    # service_account_role_arn = module.vpc_cni_irsa.arn
     }
     aws-ebs-csi-driver = {
       name                     = "aws-ebs-csi-driver"
@@ -207,7 +207,7 @@ module "aws_load_balancer_controller_irsa" {
     oidc = {
       provider_arn = module.eks.oidc_provider_arn
       namespace_service_accounts = [
-        "aws-load-balancer-controller:aws-load-balancer-controller"
+        "kube-management:aws-load-balancer-controller"
       ]
     }
   }
@@ -282,9 +282,9 @@ module "cert_manager_irsa" {
     oidc = {
       provider_arn = module.eks.oidc_provider_arn
       namespace_service_accounts = [
-        "cert-manager:cert-manager",
-        "cert-manager:cert-manager-cainjector",
-        "cert-manager:cert-manager-webhook"
+        "kube-management:cert-manager",
+        "kube-management:cert-manager-cainjector",
+        "kube-management:cert-manager-webhook"
       ]
     }
   }
@@ -372,21 +372,21 @@ module "cloudwatch_agent_irsa" {
 ###############################################################################
 # vpc-cni IRSA
 ###############################################################################
-module "vpc_cni_irsa" {
-  source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts"
-  version = "~> 6.0"
-  name    = "vpc-cni-irsa"
+# module "vpc_cni_irsa" {
+#   source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts"
+#   version = "~> 6.0"
+#   name    = "vpc-cni-irsa"
 
-  attach_vpc_cni_policy = true
+#   attach_vpc_cni_policy = true
 
-  oidc_providers = {
-    oidc = {
-      provider_arn = module.eks.oidc_provider_arn
-      namespace_service_accounts = [
-        "kube-system:vpc-cni"
-      ]
-    }
-  }
+#   oidc_providers = {
+#     oidc = {
+#       provider_arn = module.eks.oidc_provider_arn
+#       namespace_service_accounts = [
+#         "kube-system:aws-node"
+#       ]
+#     }
+#   }
 
-  tags = local.tags
-}
+#   tags = local.tags
+# }

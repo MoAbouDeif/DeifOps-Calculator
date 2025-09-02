@@ -1,0 +1,9 @@
+dependencies:
+- name: aws-load-balancer-controller
+  repository: https://aws.github.io/eks-charts
+  version: 1.4.4
+- name: argo-cd
+  repository: https://argoproj.github.io/argo-helm
+  version: 8.3.3
+digest: sha256:ffa10f2cff10d9ac93546889d67d1523cab30dfa9bb027f0bc7977c6cfa4ebc1
+generated: "2025-09-02T17:10:38.567967339+03:00"
