@@ -29,7 +29,7 @@ dependencies:
     repository: "https://charts.bitnami.com/bitnami"
   - name: backend
     version: 0.1.0
-    repository: "file://subcharts/backend"
+    repository: "file://../subcharts/backend"
   - name: frontend
     version: 0.1.0
-    repository: "file://subcharts/frontend"
+    repository: "file://../subcharts/frontend"
