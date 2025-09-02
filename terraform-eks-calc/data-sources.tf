@@ -10,3 +10,5 @@ data "aws_route53_zone" "selected" {
 data "aws_eks_cluster_auth" "token" {
   name = module.eks.cluster_name
 }
+
+# data "aws_ecrpublic_authorization_token" "token" {}
