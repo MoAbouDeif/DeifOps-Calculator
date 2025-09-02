@@ -8,6 +8,6 @@ parameters:
   fsType: {{ .parameters.fsType | default "ext4" }}
   type: {{ .parameters.type | default "gp3" }}
 provisioner: {{ .provisioner | default "ebs.csi.aws.com" }}
-reclaimPolicy: {{ .reclaimPolicy | default "Retain" -}}
+reclaimPolicy: {{ .reclaimPolicy | default "Retain" }}
 volumeBindingMode: {{ .volumeBindingMode | default "WaitForFirstConsumer" }}
 {{- end }}
