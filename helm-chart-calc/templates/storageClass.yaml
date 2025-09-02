@@ -1,0 +1,13 @@
+{{- with .Values.storageClass }}
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  annotations:
+  name: {{ .name | default "gp3" }}
+parameters:
+  fsType: {{ .parameters.fsType | default "ext4" }}
+  type: {{ .parameters.type | default "gp3" }}
+provisioner: ebs.csi.aws.com
+reclaimPolicy: {{ .reclaimPolicy | default "Retain" -}}
+volumeBindingMode: {{ .volumeBindingMode | default "WaitForFirstConsumer" }}
+{{- end }}

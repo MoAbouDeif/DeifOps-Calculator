@@ -1,3 +1,12 @@
+storageClass:
+  name: gp3
+  provisioner: ebs.csi.aws.com
+  parameters:
+    type: gp3
+    fsType: ext4
+  reclaimPolicy: Retain
+  volumeBindingMode: WaitForFirstConsumer
+
 frontend:
   replicaCount: 2
   ingress:
@@ -9,9 +18,9 @@ frontend:
       alb.ingress.kubernetes.io/target-type: ip
       alb.ingress.kubernetes.io/ssl-redirect: '443'
       alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS":443}]'
-      external-dns.alpha.kubernetes.io/hostname: calculator.deifops.click
+      external-dns.alpha.kubernetes.io/hostname: deifops.click
     hosts:
-      - host: calculator.deifops.click
+      - host: deifops.click
         paths:
           - path: /
             pathType: Prefix
@@ -26,7 +35,7 @@ frontend:
     port: 80
   env:
     - name: SERVER_NAME
-      value: calculator.deifops.click
+      value: deifops.click
     - name: BACKEND_HOST
       value: deifops-backend
     - name: BACKEND_PORT
@@ -74,7 +83,7 @@ backend:
     - name: MYSQL_DB
       value: calc_db
     - name: ALLOWED_ORIGINS
-      value: 'https://calculator.deifops.click'
+      value: 'https://deifops.click'
 mysql:
   fullname: ''
   fullnameOverride: deifops-mysql
