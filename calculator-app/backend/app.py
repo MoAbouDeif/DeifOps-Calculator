@@ -16,7 +16,11 @@ mysql = init_db(app)
 
 # Configure CORS from environment
 
-allowed_origins = [origin.strip() for origin in os.getenv("ALLOWED_ORIGINS", "").split(",") if origin.strip()]
+allowed_origins = [
+    origin.strip()
+    for origin in os.getenv("ALLOWED_ORIGINS", "").split(",")
+    if origin.strip()
+]
 
 CORS(
     app,

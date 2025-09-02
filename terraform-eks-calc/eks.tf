@@ -16,6 +16,7 @@ module "eks" {
     kube-proxy = {}
     vpc-cni = {
       before_compute = true
+      service_account_role_arn = module.cert_manager_irsa.arn
     }
     aws-ebs-csi-driver = {
       name                     = "aws-ebs-csi-driver"
@@ -68,6 +69,8 @@ module "karpenter" {
   source = "terraform-aws-modules/eks/aws//modules/karpenter"
 
   cluster_name = module.eks.cluster_name
+
+  service_account_ = 
 
   node_iam_role_additional_policies = {
     AmazonSSMManagedInstanceCore = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
@@ -159,59 +162,59 @@ module "aws_load_balancer_controller_irsa" {
   }
 }
 
-resource "helm_release" "aws_load_balancer_controller" {
-  chart = "aws-load-balancer-controller"
-  name  = "aws-load-balancer-controller"
+# resource "helm_release" "aws_load_balancer_controller" {
+#   chart = "aws-load-balancer-controller"
+#   name  = "aws-load-balancer-controller"
 
-  lint             = true
-  namespace        = "aws-load-balancer-controller"
-  repository       = "https://aws.github.io/eks-charts"
-  version          = "1.13.4"
-  create_namespace = true
-  depends_on = [
-    module.aws_load_balancer_controller_irsa,
-    module.eks.eks_managed_node_groups,
-    helm_release.cert_manager_controller
-  ]
-  set = [
-    {
-      name  = "serviceAccount.create"
-      value = "true"
-    },
-    {
-      name  = "serviceAccount.name"
-      value = "aws-load-balancer-controller"
-    },
-    {
-      name  = "serviceAccount.annotations.eks\\.amazonaws\\.com/role-arn"
-      value = "${module.aws_load_balancer_controller_irsa.arn}"
-    },
-    {
-      name  = "vpcId"
-      value = module.vpc.vpc_id
-    },
-    {
-      name  = "region"
-      value = var.aws_region
-    },
-    {
-      name  = "clusterName"
-      value = module.eks.cluster_name
-    },
-    {
-      name  = "replicaCount"
-      value = "2"
-    },
-    {
-      name  = "enableCertManager"
-      value = true
-    },
-    {
-      name  = "clusterSecretsPermissions.allowAllSecrets"
-      value = true
-    }
-  ]
-}
+#   lint             = true
+#   namespace        = "aws-load-balancer-controller"
+#   repository       = "https://aws.github.io/eks-charts"
+#   version          = "1.13.4"
+#   create_namespace = true
+#   depends_on = [
+#     module.aws_load_balancer_controller_irsa,
+#     module.eks.eks_managed_node_groups,
+#     helm_release.cert_manager_controller
+#   ]
+#   set = [
+#     {
+#       name  = "serviceAccount.create"
+#       value = "true"
+#     },
+#     {
+#       name  = "serviceAccount.name"
+#       value = "aws-load-balancer-controller"
+#     },
+#     {
+#       name  = "serviceAccount.annotations.eks\\.amazonaws\\.com/role-arn"
+#       value = "${module.aws_load_balancer_controller_irsa.arn}"
+#     },
+#     {
+#       name  = "vpcId"
+#       value = module.vpc.vpc_id
+#     },
+#     {
+#       name  = "region"
+#       value = var.aws_region
+#     },
+#     {
+#       name  = "clusterName"
+#       value = module.eks.cluster_name
+#     },
+#     {
+#       name  = "replicaCount"
+#       value = "2"
+#     },
+#     {
+#       name  = "enableCertManager"
+#       value = true
+#     },
+#     {
+#       name  = "clusterSecretsPermissions.allowAllSecrets"
+#       value = true
+#     }
+#   ]
+# }
 
 ###############################################################################
 # cert-manager and IRSA
@@ -238,34 +241,34 @@ module "cert_manager_irsa" {
   tags = local.tags
 }
 
-resource "helm_release" "cert_manager_controller" {
-  chart = "cert-manager"
-  name  = "cert-manager"
+# resource "helm_release" "cert_manager_controller" {
+#   chart = "cert-manager"
+#   name  = "cert-manager"
 
-  namespace        = "cert-manager"
-  create_namespace = true
-  lint             = true
-  repository       = "https://charts.jetstack.io"
-  version          = "1.18.2"
-  depends_on = [
-    module.cert_manager_irsa,
-    module.eks.eks_managed_node_groups
-  ]
-  set = [
-    {
-      name  = "serviceAccount.create"
-      value = "true"
-    },
-    {
-      name  = "cainjector.serviceAccount.annotations.eks\\.amazonaws\\.com/role-arn"
-      value = "${module.cert_manager_irsa.arn}"
-    },
-    {
-      name  = "installCRDs"
-      value = "true"
-    },
-  ]
-}
+#   namespace        = "cert-manager"
+#   create_namespace = true
+#   lint             = true
+#   repository       = "https://charts.jetstack.io"
+#   version          = "1.18.2"
+#   depends_on = [
+#     module.cert_manager_irsa,
+#     module.eks.eks_managed_node_groups
+#   ]
+#   set = [
+#     {
+#       name  = "serviceAccount.create"
+#       value = "true"
+#     },
+#     {
+#       name  = "cainjector.serviceAccount.annotations.eks\\.amazonaws\\.com/role-arn"
+#       value = "${module.cert_manager_irsa.arn}"
+#     },
+#     {
+#       name  = "installCRDs"
+#       value = "true"
+#     },
+#   ]
+# }
 
 ###############################################################################
 # external-dns IRSA
