@@ -207,7 +207,7 @@ module "aws_load_balancer_controller_irsa" {
     oidc = {
       provider_arn = module.eks.oidc_provider_arn
       namespace_service_accounts = [
-        "kube-management:aws-load-balancer-controller"
+        "aws-load-balancer-controller:aws-load-balancer-controller"
       ]
     }
   }
