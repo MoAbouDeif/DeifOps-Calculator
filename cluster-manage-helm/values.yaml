@@ -1,17 +1,15 @@
 aws-load-balancer-controller:
-  clusterName: eks-cluster-deifops
+  clusterName: "eks-cluster-deif-dev"
   serviceAccount:
     create: true
     name: aws-load-balancer-controller
     annotations:
-      eks.amazonaws.com/role-arn: arn:aws:iam::993260646119:role/aws-load-balancer-controller-20250902150740569600000011
+      eks.amazonaws.com/role-arn: arn:aws:iam::993260646119:role/aws-load-balancer-controller-20250903065830503700000011
   region: eu-central-1
-  vpcId: vpc-035a075ab420b5044
+  vpcId: vpc-02da953bca4253828
   replicaCount: 2
   clusterSecretsPermissions.allowAllSecrets: true
   enableCertManager: false
-
-
 argo-cd:
   global:
     domain: argocd.deifops.click
@@ -26,6 +24,7 @@ argo-cd:
       servicePortHttpName: http
     ingress:
       enabled: true
+      hostname: argocd.deifops.click
       controller: aws
       ingressClassName: alb
       path: /
@@ -35,12 +34,11 @@ argo-cd:
         alb.ingress.kubernetes.io/target-type: ip
         alb.ingress.kubernetes.io/backend-protocol: HTTP
         alb.ingress.kubernetes.io/listen-ports: '[{"HTTP":80}, {"HTTPS":443}]'
-        alb.ingress.kubernetes.io/ssl-redirect: '443'
+        alb.ingress.kubernetes.io/ssl-redirect: 443
         external-dns.alpha.kubernetes.io/hostname: argocd.deifops.click
       aws:
         serviceType: ClusterIP # <- Used with target-type: ip
         backendProtocolVersion: GRPC
-
 nginx-ingress:
   ingress:
     enabled: true
