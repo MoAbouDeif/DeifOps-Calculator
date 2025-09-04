@@ -41,8 +41,7 @@ frontend:
     tag: 1.20.0
   imagePullSecrets: []
   service:
-    type: ClusterIP
-    port: 80
+    type: NodePort
   env:
     - name: SERVER_NAME
       value: deifops.click
