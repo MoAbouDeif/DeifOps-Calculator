@@ -31,10 +31,6 @@ module "eks" {
       name                     = "external-dns"
       service_account_role_arn = module.external_dns_irsa.arn
     }
-    # cert-manager = {
-    #   name                     = "cert-manager"
-    #   service_account_role_arn = module.cert_manager_irsa.arn
-    # }
     amazon-cloudwatch-observability = {
       name                     = "amazon-cloudwatch-observability"
       service_account_role_arn = module.cloudwatch_agent_irsa.arn
@@ -234,7 +230,7 @@ module "aws_load_balancer_controller_irsa" {
     oidc = {
       provider_arn = module.eks.oidc_provider_arn
       namespace_service_accounts = [
-        "kube-system:aws-load-balancer-controller"
+        "aws-load-balancer-controller:aws-load-balancer-controller"
       ]
     }
   }
@@ -249,7 +245,7 @@ resource "helm_release" "aws_load_balancer_controller" {
   lint       = true
 
   create_namespace = true
-  namespace        = "kube-system"
+  namespace        = "aws-load-balancer-controller"
   wait             = true
 
   depends_on = [
@@ -296,25 +292,66 @@ resource "helm_release" "aws_load_balancer_controller" {
     }
   ]
 }
-
 ###############################################################################
-# ArgoCD Helm
+# cluster autoscaler 
 ###############################################################################
+module "cluster_autoscaler_irsa" {
+  source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts"
+  version = "~> 6.0"
+  name    = "cluster-autoscaler"
 
-resource "helm_release" "argocd" {
-  chart = "argo-cd"
-  name  = "argo-cd"
+  attach_cluster_autoscaler_policy = true
 
-  repository = "https://argoproj.github.io/argo-helm"
-  version    = "8.3.3"
+  oidc_providers = {
+    oidc = {
+      provider_arn = module.eks.oidc_provider_arn
+      namespace_service_accounts = [
+        "kube-system:cluster-autoscaler"
+      ]
+    }
+  }
+
+  tags = local.tags
+
+}
+resource "helm_release" "autoscaler" {
+  chart = "cluster-autoscaler"
+  name  = "cluster-autoscaler"
+
+  repository = "https://kubernetes.github.io/autoscaler"
+  version    = "9.50.1"
   lint       = true
 
-  namespace        = "argocd"
   create_namespace = true
+  namespace        = "kube-system"
   wait             = true
 
-  depends_on = [helm_release.aws_load_balancer_controller]
-  
-  values = [file("${path.module}/helm_values/argocd_values.yaml")]
+  depends_on = [
+    module.eks.eks_managed_node_groups,
+    module.eks.addons,
+    module.cluster_autoscaler_irsa
+  ]
+  set = [
+    {
+      name  = "autoDiscovery.clusterName"
+      value = module.eks.cluster_name
+    },
+    {
+      name  = "awsRegion"
+      value = var.aws_region
+    },
+    {
+      name  = "rbac.serviceAccount.name"
+      value = "cluster-autoscaler"
+    },
+    {
+      name  = "rbac.serviceAccount.annotations.eks\\.amazonaws\\.com/role-arn"
+      value = "${module.cluster_autoscaler_irsa.arn}"
+    },
+    {
+      name  = "extraArgs.balance-similar-node-groups"
+      value = "true"
+    },
+  ]
 
 }

@@ -24,9 +24,9 @@ version: 0.1.0
 appVersion: "1.0.0"
 
 dependencies:
-  - name: aws-load-balancer-controller
-    version: 1.4.4
-    repository: https://aws.github.io/eks-charts
+  # - name: aws-load-balancer-controller
+  #   version: 1.4.4
+  #   repository: https://aws.github.io/eks-charts
   # - name: external-dns
   #   version: 6.3.0
   #   repository: https://kubernetes-sigs.github.io/external-dns/

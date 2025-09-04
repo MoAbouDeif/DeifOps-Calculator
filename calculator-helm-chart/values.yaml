@@ -1,3 +1,11 @@
+secret:
+  secretName: mysql-secret
+  data:
+    mysql-password: bXlwYXNz
+    mysql-replication-password: cmVwbGljYXBhc3M=
+    mysql-root-password: cm9vdHBhc3M= 
+  
+
 storageClass:
   name: gp3
   provisioner: 'ebs.csi.aws.com'
