@@ -1,0 +1,18 @@
+project: default
+source:
+  repoURL: https://github.com/MoAbouDeif/DeifOps-Calculator.git
+  path: calculator-helm-chart
+  targetRevision: HEAD
+  helm:
+    valueFiles:
+      - values.yaml
+destination:
+  server: https://kubernetes.default.svc
+  namespace: deifops
+syncPolicy:
+  automated:
+    prune: true
+    selfHeal: true
+    enabled: true
+  syncOptions:
+    - CreateNamespace=true
