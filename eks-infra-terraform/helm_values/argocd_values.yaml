@@ -1,0 +1,33 @@
+global:
+  domain: argocd.deifops.click
+
+configs:
+  params:
+    server.insecure: "true"
+
+server:
+  service:
+    type: ClusterIP
+    servicePortHttp: 80
+    targetPort: 8080
+    servicePortHttpName: http
+
+  ingress:
+    enabled: true
+    hostname: argocd.deifops.click
+    controller: aws
+    ingressClassName: alb
+    path: /
+    pathType: Prefix
+    annotations:
+      alb.ingress.kubernetes.io/scheme: internet-facing
+      alb.ingress.kubernetes.io/target-type: ip
+      alb.ingress.kubernetes.io/backend-protocol: HTTP
+      alb.ingress.kubernetes.io/group.name: deifops.click
+      alb.ingress.kubernetes.io/listen-ports: '[{"HTTP":80}, {"HTTPS":443}]'
+      alb.ingress.kubernetes.io/ssl-redirect: 443
+      external-dns.alpha.kubernetes.io/hostname: argocd.deifops.click
+
+    aws:
+      serviceType: ClusterIP # <- Used with target-type: ip
+      backendProtocolVersion: GRPC
