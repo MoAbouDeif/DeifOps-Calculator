@@ -18,7 +18,7 @@ storageClass:
 frontend:
   replicaCount: 2
   ingress:
-    enabled: enable
+    enabled: true
     className: alb
     annotations:
       alb.ingress.kubernetes.io/scheme: internet-facing
