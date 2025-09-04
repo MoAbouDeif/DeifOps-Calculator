@@ -41,7 +41,7 @@ frontend:
     tag: 1.20.0
   imagePullSecrets: []
   service:
-    type: NodePort
+    type: ClusterIP
     port: 80
   env:
     - name: SERVER_NAME
