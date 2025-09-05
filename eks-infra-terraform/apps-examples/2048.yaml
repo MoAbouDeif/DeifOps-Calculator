@@ -51,7 +51,7 @@ metadata:
     alb.ingress.kubernetes.io/group.name: deifops
     alb.ingress.kubernetes.io/scheme: internet-facing
     alb.ingress.kubernetes.io/target-type: ip
-    alb.ingress.kubernetes.io/ssl-redirect: "443"
+    # alb.ingress.kubernetes.io/ssl-redirect: "443"
     alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS":443}]'
     external-dns.alpha.kubernetes.io/hostname: docker-2048.deifops.click
     # cert-manager.io/cluster-issuer: letsencrypt-prod

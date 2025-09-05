@@ -52,26 +52,24 @@ service:
   # This sets the service type more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types
   type: ClusterIP
   # This sets the ports more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#field-spec-ports
-  port: 80
+  port: ""
 
 ingress:
   enabled: true
   className: "alb"
-  annotations: 
-    kubernetes.io/ingress.class: alb
-    alb.ingress.kubernetes.io/scheme: internet-facing
-    alb.ingress.kubernetes.io/target-type: ip
-    alb.ingress.kubernetes.io/ssl-redirect: "443"
-    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS":443}]'
-    external-dns.alpha.kubernetes.io/hostname: calculator.deifops.click
-    # cert-manager.io/cluster-issuer: letsencrypt-prod    
-    # kubernetes.io/ingress.class: nginx
-    # kubernetes.io/tls-acme: "true"
-  hosts:
-    - host: calculator.deifops.click
-      paths:
-        - path: /
-          pathType: Prefix
+  annotations: {}
+    # kubernetes.io/ingress.class: alb
+    # alb.ingress.kubernetes.io/scheme: internet-facing
+    # alb.ingress.kubernetes.io/target-type: ip
+    # alb.ingress.kubernetes.io/ssl-redirect: "443"
+    # alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS":443}]'
+    # external-dns.alpha.kubernetes.io/hostname: calculator.deifops.click
+    # cert-manager.io/cluster-issuer: letsencrypt-prod
+    # alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:eu-central-1:993260646119:certificate/xxxxxx
+    # alb.ingress.kubernetes.io/group.name: deifops
+  hosts: []
+    # - host: chart-example.local
+    #   paths:
   tls: []
   #  - secretName: chart-example-tls
   #    hosts:

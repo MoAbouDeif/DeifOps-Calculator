@@ -37,6 +37,7 @@ spec:
               service:
                 name: {{ include "frontend.fullname" $ }}
                 port:
+                  name: http
                   number: {{ $.Values.service.port }}
           {{- end }}
     {{- end }}

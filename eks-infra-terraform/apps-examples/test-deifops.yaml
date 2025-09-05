@@ -35,7 +35,7 @@ metadata:
   name: hello-world-svc
   namespace: default
 spec:
-  type: NodePort
+  type: ClusterIP
   selector:
     app: hello-world
   ports:
@@ -48,9 +48,11 @@ metadata:
   name: hello-ingress
   namespace: default
   annotations:
+    kubernetes.io/ingress.class: alb
     alb.ingress.kubernetes.io/group.name: deifops
     alb.ingress.kubernetes.io/scheme: internet-facing
-    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP":80}]'   # HTTP only
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP":80}]'
     external-dns.alpha.kubernetes.io/hostname: test.deifops.click
 spec:
   ingressClassName: alb
