@@ -21,12 +21,13 @@ frontend:
     enabled: true
     className: alb
     annotations:
+      kubernetes.io/ingress.class: alb
       alb.ingress.kubernetes.io/scheme: internet-facing
-      alb.ingress.kubernetes.io/target-type: instance
- #     alb.ingress.kubernetes.io/backend-protocol: TCP
-      alb.ingress.kubernetes.io/listen-ports: '[{"HTTP":80}, {"HTTPS":443}]'
-      alb.ingress.kubernetes.io/ssl-redirect: '443'
+      alb.ingress.kubernetes.io/target-type: ip
+      alb.ingress.kubernetes.io/ssl-redirect: "443"
+      alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS":443}]'
       external-dns.alpha.kubernetes.io/hostname: deifops.click
+      # cert-manager.io/cluster-issuer: letsencrypt-prod
       # alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:eu-central-1:993260646119:certificate/xxxxxx
       # alb.ingress.kubernetes.io/group.name: deifops.click
     hosts:
@@ -34,14 +35,16 @@ frontend:
         paths:
           - path: /
             pathType: Prefix
-    tls: []
+            
   image:
     repository: deifops/calc-frontend
     pullPolicy: IfNotPresent
     tag: 1.20.0
   imagePullSecrets: []
+
   service:
     type: NodePort
+
   env:
     - name: SERVER_NAME
       value: deifops.click

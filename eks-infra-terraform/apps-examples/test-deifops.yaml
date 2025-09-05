@@ -48,6 +48,7 @@ metadata:
   name: hello-ingress
   namespace: default
   annotations:
+    alb.ingress.kubernetes.io/group.name: deifops
     alb.ingress.kubernetes.io/scheme: internet-facing
     alb.ingress.kubernetes.io/listen-ports: '[{"HTTP":80}]'   # HTTP only
     external-dns.alpha.kubernetes.io/hostname: test.deifops.click
