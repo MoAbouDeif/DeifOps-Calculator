@@ -131,7 +131,9 @@ backend:
     - name: ALLOWED_ORIGINS
       value: 'https://calc.deifops.click'
 
----
+############################################################
+# DataBase Configuration
+############################################################
 
 mysql:
   fullname: ''
