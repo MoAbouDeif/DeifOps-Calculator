@@ -5,6 +5,7 @@ secret:
     mysql-replication-password: cmVwbGljYXBhc3M=
     mysql-root-password: cm9vdHBhc3M= 
   
+---
 
 storageClass:
   name: gp3
@@ -14,6 +15,8 @@ storageClass:
     fsType: ext4
   reclaimPolicy: Retain
   volumeBindingMode: WaitForFirstConsumer
+
+---
 
 frontend:
   replicaCount: 2
@@ -67,6 +70,22 @@ frontend:
           - path: /
             pathType: Prefix
 
+  resources:
+    limits:
+      cpu: 100m
+      memory: 128Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
+
+  autoscaling:
+    enabled: true
+    minReplicas: 1
+    maxReplicas: 100
+    targetCPUUtilizationPercentage: 50
+
+---
+
 backend:
   replicaCount: 2
   image:
@@ -102,6 +121,7 @@ backend:
     - name: ALLOWED_ORIGINS
       value: 'https://calc.deifops.click'
 
+---
 
 mysql:
   fullname: ''
