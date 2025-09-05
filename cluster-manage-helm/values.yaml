@@ -24,7 +24,8 @@ argo-cd:
         alb.ingress.kubernetes.io/backend-protocol: HTTP
         alb.ingress.kubernetes.io/listen-ports: '[{"HTTP":80}, {"HTTPS":443}]'
         alb.ingress.kubernetes.io/ssl-redirect: 443
-        external-dns.alpha.kubernetes.io/hostname: argocd.deifops.click
+      external-dns.alpha.kubernetes.io/ttl: "60"
+      external-dns.alpha.kubernetes.io/ingress-hostname-source: defined-hosts-only
       aws:
         serviceType: ClusterIP # <- Used with target-type: ip
         backendProtocolVersion: GRPC
