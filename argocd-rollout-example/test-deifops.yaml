@@ -15,7 +15,7 @@ spec:
     autoPromotionEnabled: false
   revisionHistoryLimit: 2
   selector:
-    matchLables:
+    matchLabels:
       app: hello-world
   template:
     metadata:
