@@ -24,7 +24,7 @@ spec:
     spec:
       containers:
       - name: nginx
-        image: hudevals/hud-text-2048
+        image: dockersamples/static-site
         ports:
         - containerPort: 80
         resources:
