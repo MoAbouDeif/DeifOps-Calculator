@@ -1,6 +1,6 @@
 ---
-apiVersion: apps/v1
-kind: Deployment
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
 metadata:
   name: hello-world
   namespace: default
@@ -8,12 +8,12 @@ metadata:
     app: hello-world
 spec:
   replicas: 2
-  # strategy:
-  #   blueGreen:
-  #     activeService: hello-world-Active
-  #     previewService: hello-world-preview
-  #   autoPromotionEnabled: false
-  # revisionHistoryLimit: 2
+  strategy:
+    blueGreen:
+      activeService: hello-world-Active
+      previewService: hello-world-preview
+    autoPromotionEnabled: false
+  revisionHistoryLimit: 2
   selector:
     matchLables:
       app: hello-world
