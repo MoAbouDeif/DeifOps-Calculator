@@ -8,6 +8,7 @@ module "eks" {
 
   name               = local.cluster_name
   kubernetes_version = var.cluster_version
+  depends_on = [ module.vpc ]
 
   addons = {
     coredns = {
