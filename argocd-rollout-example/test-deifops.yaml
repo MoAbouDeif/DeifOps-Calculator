@@ -7,13 +7,14 @@ metadata:
   labels:
     app: hello-world
 spec:
-  replicas: 2
+  replicas: 4
   strategy:
     blueGreen:
       activeService: hello-world-active
       previewService: hello-world-preview
       autoPromotionEnabled: false
-  revisionHistoryLimit: 2
+      scaleDownDelaySeconds: 60
+  revisionHistoryLimit: 3
   selector:
     matchLabels:
       app: hello-world
