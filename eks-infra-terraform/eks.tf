@@ -10,29 +10,37 @@ module "eks" {
   kubernetes_version = var.cluster_version
 
   addons = {
-    coredns = {}
+    coredns = {
+      most_recent = true
+    }
     eks-pod-identity-agent = {
+      most_recent = true
       before_compute = true
     }
-    metrics-server = {}
-    kube-proxy     = {}
+    # metrics-server = {
+    #   most_recent = true
+    #   }
+    kube-proxy     = {
+      most_recent = true
+    }
     vpc-cni = {
+      most_recent = true
       before_compute = true
     }
     aws-ebs-csi-driver = {
-      name                     = "aws-ebs-csi-driver"
+      most_recent = true
       service_account_role_arn = module.aws_ebs_csi_driver_irsa.arn
     }
     aws-efs-csi-driver = {
-      name                     = "aws-efs-csi-driver"
+      most_recent = true
       service_account_role_arn = module.aws_efs_csi_driver_irsa.arn
     }
-    external-dns = {
-      name                     = "external-dns"
-      service_account_role_arn = module.external_dns_irsa.arn
-    }
+    # external-dns = {
+    #   most_recent = true
+    #   service_account_role_arn = module.external_dns_irsa.arn
+    # }
     amazon-cloudwatch-observability = {
-      name                     = "amazon-cloudwatch-observability"
+      most_recent = true
       service_account_role_arn = module.cloudwatch_agent_irsa.arn
     }
 
@@ -154,6 +162,38 @@ module "external_dns_irsa" {
   }
 
   tags = local.tags
+}
+
+resource "helm_release" "external_dns" {
+  chart = "external-dns"
+  name  = "external-dns"
+
+  lint       = true
+  repository = "https://kubernetes-sigs.github.io/external-dns"
+  version    = "1.18.0"
+
+  namespace        = "external-dns"
+  create_namespace = true
+  wait             = true
+
+  depends_on = [
+    module.eks.eks_managed_node_groups
+  ]
+
+  set = [
+    {
+      name  = "serviceAccount.create"
+      value = "true"
+    },
+    {
+      name = "serviceAccount.name"
+      value = "external-dns"
+    },
+    {
+      name  = "serviceAccount.annotations.eks\\.amazonaws\\.com/role-arn"
+      value = "${module.external_dns_irsa.arn}"
+    }
+  ]
 }
 
 ###############################################################################
@@ -292,9 +332,11 @@ resource "helm_release" "aws_load_balancer_controller" {
     }
   ]
 }
+
 ###############################################################################
 # cluster autoscaler 
 ###############################################################################
+
 module "cluster_autoscaler_irsa" {
   source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts"
   version = "~> 6.0"
@@ -353,5 +395,40 @@ resource "helm_release" "autoscaler" {
       value = "true"
     },
   ]
+}
 
+###############################################################################
+# cluster autoscaler 
+###############################################################################
+
+resource "helm_release" "metrics_server" {
+  chart = "metrics-server"
+  name  = "metrics-server"
+
+  repository = "https://kubernetes-sigs.github.io/metrics-server"
+  version    = "3.13.0"
+  lint       = true
+
+  create_namespace = true
+  namespace        = "metric-server"
+  wait             = true
+
+  depends_on = [
+    module.eks.eks_managed_node_groups,
+  ]
+
+  set = [
+    {
+      name = "serviceAccount.create"
+      value = true
+    },
+    {
+      name = "rbac.create"
+      value = true
+    },
+    # {
+    #   name = "args"
+    #   value = ""
+    # }
+  ]
 }
