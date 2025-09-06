@@ -24,7 +24,7 @@ spec:
     spec:
       containers:
       - name: nginx
-        image: alexwhen/docker-2048
+        image: hudevals/hud-text-2048
         ports:
         - containerPort: 80
         resources:
