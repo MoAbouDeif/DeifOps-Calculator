@@ -43,7 +43,7 @@ spec:
   selector:
     app: hello-world
   ports:
-  - port: 80
+  - port: 8080
     targetPort: 80
 ---
 apiVersion: v1
@@ -56,7 +56,7 @@ spec:
   selector:
     app: hello-world
   ports:
-  - port: 8080
+  - port: 8088s
     targetPort: 80
 # ---
 # apiVersion: networking.k8s.io/v1
