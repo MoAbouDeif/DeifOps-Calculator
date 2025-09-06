@@ -10,7 +10,7 @@ spec:
   replicas: 2
   strategy:
     blueGreen:
-      activeService: hello-world-Active
+      activeService: hello-world-active
       previewService: hello-world-preview
     autoPromotionEnabled: false
   revisionHistoryLimit: 2
@@ -38,7 +38,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: hello-world-Active
+  name: hello-world-active
   namespace: default
 spec:
   type: ClusterIP
