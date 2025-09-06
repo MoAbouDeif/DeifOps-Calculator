@@ -12,7 +12,7 @@ spec:
     blueGreen:
       activeService: hello-world-active
       previewService: hello-world-preview
-    autoPromotionEnabled: false
+      autoPromotionEnabled: false
   revisionHistoryLimit: 2
   selector:
     matchLabels:
@@ -24,7 +24,7 @@ spec:
     spec:
       containers:
       - name: nginx
-        image: docker.io/kostiscodefresh/gitops-canary-app:v1.0
+        image: docker.io/kostiscodefresh/gitops-canary-app:v2.0
         ports:
         - containerPort: 8080
         resources:
