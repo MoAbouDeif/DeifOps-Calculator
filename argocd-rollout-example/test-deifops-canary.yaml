@@ -2,7 +2,6 @@ apiVersion: argoproj.io/v1alpha1
 kind: Rollout
 metadata:
   name: test-deifops-canary
-  namespace: default
   labels:
     app: test-deifops-canary
 spec:
@@ -13,20 +12,20 @@ spec:
       app: test-deifops-canary
   strategy:
     canary:
-      activeService: test-deifops-active
-      canaryService: test-deifops-canary
-      autoPromotionEnabled: false
+      stableService: test-deifops-active   # ✅ required
+      canaryService: test-deifops-canary   # ✅ required
       scaleDownDelaySeconds: 60
+      autoPromotionEnabled: false
+      steps:
+      - setWeight: 30
+      - pause: {}
+      - setWeight: 60
+      - pause: {}
+      - setWeight: 100
+      - pause: {}
       trafficRouting:
         traefik:
-          weightedTraefikServiceName: traefik-service   # must exist as TraefikService
-      steps:
-        - setWeight: 30
-        - pause: {}
-        - setWeight: 60
-        - pause: {}
-        - setWeight: 100
-        - pause: {}
+          weightedTraefikServiceName: traefik-service
   template:
     metadata:
       labels:
@@ -39,11 +38,12 @@ spec:
         - containerPort: 8080
         resources:
           requests:
-            memory: "64Mi"
-            cpu: "250m"
+            cpu: 250m
+            memory: 64Mi
           limits:
-            memory: "128Mi"
-            cpu: "500m"
+            cpu: 500m
+            memory: 128Mi
+
 ---
 apiVersion: v1
 kind: Service
