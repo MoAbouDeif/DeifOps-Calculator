@@ -9,6 +9,9 @@ spec:
     canary:
       canaryService: demo-canary
       stableService: demo-stable
+      trafficRouting:
+        nginx:
+          stableIngress: demo-stable-ingress
       steps:
         - setWeight: 20
         - pause: {duration: 30s}
