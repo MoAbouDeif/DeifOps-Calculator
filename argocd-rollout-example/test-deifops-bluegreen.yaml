@@ -25,7 +25,7 @@ spec:
     spec:
       containers:
       - name: nginx
-        image: docker.io/kostiscodefresh/gitops-canary-app:v1.0
+        image: docker.io/kostiscodefresh/gitops-canary-app:v2.0
         ports:
         - containerPort: 8080
         resources:
