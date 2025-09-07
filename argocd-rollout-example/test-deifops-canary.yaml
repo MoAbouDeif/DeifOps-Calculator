@@ -4,7 +4,7 @@ metadata:
   name: demo-rollout
   namespace: default
 spec:
-  replicas: 3
+  replicas: 10
   strategy:
     canary:
       canaryService: demo-canary
