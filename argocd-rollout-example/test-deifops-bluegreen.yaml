@@ -65,7 +65,7 @@ spec:
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: hello-ingress
+  name: green-ingress
   namespace: default
 spec:
   ingressClassName: nginx
@@ -80,6 +80,15 @@ spec:
             name: test-deifops-bluegreen-preview
             port:
               number: 80
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: blue-ingress
+  namespace: default
+spec:
+  ingressClassName: nginx
+  rules:
   - host: blue.local
     http:
       paths:
