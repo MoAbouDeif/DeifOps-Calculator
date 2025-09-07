@@ -14,9 +14,9 @@ spec:
           stableIngress: demo-stable-ingress
       steps:
         - setWeight: 20
-        - pause: {duration: 30s}
+        - pause: {}
         - setWeight: 50
-        - pause: {duration: 30s}
+        - pause: {}
         - setWeight: 100
   selector:
     matchLabels:
@@ -28,7 +28,7 @@ spec:
     spec:
       containers:
         - name: demo
-          image: nginx:1.19
+          image: docker.io/kostiscodefresh/gitops-canary-app:v1.0
           ports:
             - containerPort: 80
 
