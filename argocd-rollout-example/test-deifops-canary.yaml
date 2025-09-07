@@ -5,17 +5,19 @@ metadata:
   namespace: default
 spec:
   replicas: 10
+  revisionHistoryLimit: 3
   strategy:
     canary:
       canaryService: demo-canary
       stableService: demo-stable
+      scaleDownDelaySeconds: 60
       trafficRouting:
         nginx:
           stableIngress: demo-ingress
       steps:
-        - setWeight: 20
+        - setWeight: 33
         - pause: {}
-        - setWeight: 50
+        - setWeight: 67
         - pause: {}
         - setWeight: 100
   selector:
@@ -28,7 +30,7 @@ spec:
     spec:
       containers:
         - name: demo
-          image: docker.io/kostiscodefresh/gitops-canary-app:v2.0
+          image: docker.io/kostiscodefresh/gitops-canary-app:v3.0
           ports:
             - containerPort: 8080
 ---
