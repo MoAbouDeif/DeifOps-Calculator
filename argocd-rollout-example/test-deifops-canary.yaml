@@ -75,20 +75,3 @@ spec:
                 name: demo-stable
                 port:
                   number: 80
----
-apiVersion: argoproj.io/v1alpha1
-kind: AnalysisTemplate
-metadata:
-  name: success-rate
-  namespace: default
-spec:
-  metrics:
-    - name: success-rate
-      interval: 30s
-      successCondition: result[0] >= 0.95
-      provider:
-        prometheus:
-          address: http://prometheus-server.monitoring.svc.cluster.local:80
-          query: |
-            sum(rate(http_requests_total{status!~"5.."}[1m])) 
-            / sum(rate(http_requests_total[1m]))
