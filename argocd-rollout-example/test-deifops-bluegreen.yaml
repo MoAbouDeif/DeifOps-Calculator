@@ -1,89 +1,92 @@
-# ---
-# apiVersion: argoproj.io/v1alpha1
-# kind: Rollout
-# metadata:
-#   name: test-deifops-bluegreen
-#   namespace: default
-#   labels:
-#     app: test-deifops-bluegreen
-# spec:
-#   replicas: 4
-#   strategy:
-#     blueGreen:
-#       activeService: test-deifops-bluegreen-active
-#       previewService: test-deifops-bluegreen-preview
-#       autoPromotionEnabled: false
-#       scaleDownDelaySeconds: 60
-#   revisionHistoryLimit: 3
-#   selector:
-#     matchLabels:
-#       app: test-deifops-bluegreen
-#   template:
-#     metadata:
-#       labels:
-#         app: test-deifops-bluegreen
-#     spec:
-#       containers:
-#       - name: nginx
-#         image: docker.io/kostiscodefresh/gitops-canary-app:v1.0
-#         ports:
-#         - containerPort: 8080
-#         resources:
-#           requests:
-#             memory: "64Mi"
-#             cpu: "250m"
-#           limits:
-#             memory: "128Mi"
-#             cpu: "500m"
-# ---
-# apiVersion: v1
-# kind: Service
-# metadata:
-#   name: test-deifops-bluegreen-active
-#   namespace: default
-# spec:
-#   type: ClusterIP
-#   selector:
-#     app: test-deifops-bluegreen
-#   ports:
-#   - port: 8080
-#     targetPort: 8080
-# ---
-# apiVersion: v1
-# kind: Service
-# metadata:
-#   name: test-deifops-bluegreen-preview
-#   namespace: default
-# spec:
-#   type: ClusterIP
-#   selector:
-#     app: test-deifops-bluegreen
-#   ports:
-#   - port: 8088
-#     targetPort: 8080
-# # ---
-# # apiVersion: networking.k8s.io/v1
-# # kind: Ingress
-# # metadata:
-# #   name: hello-ingress
-# #   namespace: default
-# #   annotations:
-# #     kubernetes.io/ingress.class: alb
-# #     alb.ingress.kubernetes.io/group.name: deifops
-# #     alb.ingress.kubernetes.io/scheme: internet-facing
-# #     alb.ingress.kubernetes.io/target-type: ip
-# #     alb.ingress.kubernetes.io/listen-ports: '[{"HTTP":80}]'
-# #     external-dns.alpha.kubernetes.io/hostname: test.deifops.click
-# # spec:
-# #   ingressClassName: alb
-# #   rules:
-# #   - host: test.deifops.click
-# #     http:
-# #       paths:
-# #       - path: /
-# #         pathType: Prefix
-# #         backend:
-# #           service:
-# #             name: test-deifops-bluegreen-svc
-# #             port:
-# #               number: 80
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata:
+  name: test-deifops-bluegreen
+  namespace: default
+  labels:
+    app: test-deifops-bluegreen
+spec:
+  replicas: 10
+  strategy:
+    blueGreen:
+      activeService: test-deifops-bluegreen-active
+      previewService: test-deifops-bluegreen-preview
+      autoPromotionEnabled: false
+      scaleDownDelaySeconds: 60
+  revisionHistoryLimit: 3
+  selector:
+    matchLabels:
+      app: test-deifops-bluegreen
+  template:
+    metadata:
+      labels:
+        app: test-deifops-bluegreen
+    spec:
+      containers:
+      - name: nginx
+        image: docker.io/kostiscodefresh/gitops-canary-app:v1.0
+        ports:
+        - containerPort: 8080
+        resources:
+          requests:
+            memory: "64Mi"
+            cpu: "250m"
+          limits:
+            memory: "128Mi"
+            cpu: "500m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: test-deifops-bluegreen-active
+  namespace: default
+spec:
+  type: ClusterIP
+  selector:
+    app: test-deifops-bluegreen
+  ports:
+  - port: 80
+    targetPort: 8080
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: test-deifops-bluegreen-preview
+  namespace: default
+spec:
+  type: ClusterIP
+  selector:
+    app: test-deifops-bluegreen
+  ports:
+  - port: 80
+    targetPort: 8080
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: hello-ingress
+  namespace: default
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: green.local
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: test-deifops-bluegreen-preview
+            port:
+              number: 80
+  - host: blue.local
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: test-deifops-bluegreen-active
+            port:
+              number: 80
