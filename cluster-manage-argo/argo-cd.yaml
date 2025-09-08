@@ -20,10 +20,10 @@ spec:
             server.insecure: true
         server:
           ingress:
-            enable: true
+            enabled: true
             ingressClassName: nginx
           ingressGrpc:
-            enable: true
+            enabled: true
             ingressClassName: nginx            
   sources: []
   project: default

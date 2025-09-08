@@ -15,10 +15,9 @@ spec:
       parameters:
         - name: installCRDs
           value: 'false'
-        - name: dashboard.enable
-          value: 'true'
       values: |
         dashboard:
+        enabled: true
           ingress:
             enabled: true
             ingressClassName: nginx
