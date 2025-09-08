@@ -2,12 +2,12 @@ apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
   name: cluster-management
-  namespace: argo
+  namespace: argocd
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 spec:
   destination:
-    namespace: argo
+    namespace: argocd
     server: https://kubernetes.default.svc
   source:
     path: ./cluster-manage-argo
