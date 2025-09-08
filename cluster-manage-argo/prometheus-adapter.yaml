@@ -1,0 +1,28 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: prometheus-adapter
+spec:
+  destination:
+    namespace: monitoring
+    server: https://kubernetes.default.svc
+  source:
+    path: ''
+    repoURL: https://prometheus-community.github.io/helm-charts
+    targetRevision: 5.1.0
+    chart: prometheus-adapter
+    helm:
+      values: |
+        prometheus:
+          url: http://prometheus-operated.monitoring.svc
+          port: 9090
+          path: ""
+  sources: []
+  project: default
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+      enabled: true
+    syncOptions:
+      - CreateNamespace=true
