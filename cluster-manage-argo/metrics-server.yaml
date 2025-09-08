@@ -12,7 +12,7 @@ spec:
     targetRevision: 3.13.0
     chart: metrics-server
     helm:
-      parameters:
+      values: |
         args: 
           - '--kubelet-insecure-tls'
         replicas: 2
