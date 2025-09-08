@@ -7,7 +7,7 @@ metadata:
     - resources-finalizer.argocd.argoproj.io
 spec:
   destination:
-    namespace: manage
+    namespace: argo
     server: https://kubernetes.default.svc
   source:
     path: ./cluster-manage-argo
@@ -17,8 +17,8 @@ spec:
   project: default
   syncPolicy:
     automated:
-      prune: false
-      selfHeal: false
+      prune: true
+      selfHeal: true
       enabled: true
     syncOptions:
       - CreateNamespace=true
