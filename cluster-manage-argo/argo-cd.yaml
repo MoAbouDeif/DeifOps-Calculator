@@ -4,7 +4,7 @@ metadata:
   name: argocd
 spec:
   destination:
-    namespace: argo
+    namespace: argocd
     server: https://kubernetes.default.svc
   source:
     path: ''
@@ -31,6 +31,5 @@ spec:
     automated:
       prune: true
       selfHeal: true
-      enabled: true
     syncOptions:
       - CreateNamespace=true

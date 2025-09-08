@@ -4,7 +4,7 @@ metadata:
   name: argo-rollouts
 spec:
   destination:
-    namespace: argo
+    namespace: argocd
     server: https://kubernetes.default.svc
   source:
     path: ''
