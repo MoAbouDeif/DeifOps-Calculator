@@ -13,6 +13,8 @@ spec:
     chart: kube-prometheus-stack
     helm:
       values: |
+        crds:
+          enabled: false
         alertmanager:
           ingress:
             enabled: true
