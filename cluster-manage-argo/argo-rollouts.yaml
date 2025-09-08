@@ -21,7 +21,7 @@ spec:
           ingress:
             enabled: true
             ingressClassName: nginx
-            paths: ["rollouts.argo.local"]
+            hosts: ["rollouts.argo.local"]
 
 
   sources: []
