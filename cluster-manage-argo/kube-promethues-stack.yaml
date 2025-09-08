@@ -16,12 +16,18 @@ spec:
         alertmanager:
           ingress:
             enabled: true
+            ingressClassName: nginx
+            hosts: ["alert.prometheus.local"]
         grafana:
           ingress:
             enabled: true
+            ingressClassName: nginx
+            hosts: ["grafana.prometheus.local"]
         prometheus:
           ingress:
             enabled: true
+            ingressClassName: nginx
+            hosts: ["prometheus.local"]
   sources: []
   project: default
   syncPolicy:
