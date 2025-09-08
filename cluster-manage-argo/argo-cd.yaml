@@ -17,20 +17,20 @@ spec:
           domain: cd.argo.local
         configs:
           params:
-            server.insecure: 'true'
+            server.insecure: true
         server:
           ingress:
-            enable: 'true'
+            enable: true
             ingressClassName: nginx
           ingressGrpc:
-            enable: 'true'
+            enable: true
             ingressClassName: nginx            
   sources: []
   project: default
   syncPolicy:
     automated:
-      prune: false
-      selfHeal: false
+      prune: true
+      selfHeal: true
       enabled: true
     syncOptions:
       - CreateNamespace=true

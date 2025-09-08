@@ -15,19 +15,19 @@ spec:
       values: |
         alertmanager:
           ingress:
-            enabled: 'true'
+            enabled: true
         grafana:
           ingress:
-            enabled: 'true'
+            enabled: true
         prometheus:
           ingress:
-            enabled: 'true'
+            enabled: true
   sources: []
   project: default
   syncPolicy:
     automated:
-      prune: false
-      selfHeal: false
+      prune: true
+      selfHeal: true
       enabled: true
     syncOptions:
       - CreateNamespace=true

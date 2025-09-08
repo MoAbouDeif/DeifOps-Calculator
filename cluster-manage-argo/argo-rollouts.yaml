@@ -12,13 +12,16 @@ spec:
     targetRevision: 2.40.3
     chart: argo-rollouts
     helm:
+      parameters:
+        - name: installCRDs
+          value: 'false'
+        - name: dashboard.enable
+          value: 'true'
       values: |
-        installCRDs: 'false'
         dashboard:
-          enabled: 'true'
           ingress:
-            enabled: 'true'
-            ingressClassName: 'nginx'
+            enabled: true
+            ingressClassName: nginx
             paths: ["rollouts.argo.local"]
 
 
@@ -26,8 +29,8 @@ spec:
   project: default
   syncPolicy:
     automated:
-      prune: false
-      selfHeal: false
+      prune: true
+      selfHeal: true
       enabled: true
     syncOptions:
       - CreateNamespace=true
