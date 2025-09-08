@@ -17,7 +17,7 @@ spec:
           value: 'false'
       values: |
         dashboard:
-        enabled: true
+          enabled: true
           ingress:
             enabled: true
             ingressClassName: nginx
