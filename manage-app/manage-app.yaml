@@ -2,7 +2,9 @@ apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
   name: cluster-management
-  namespace: manage
+  namespace: argo
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
 spec:
   destination:
     namespace: manage
@@ -12,7 +14,7 @@ spec:
     repoURL: https://github.com/MoAbouDeif/DeifOps-Calculator.git
     targetRevision: main
   sources: []
-  project: management
+  project: default
   syncPolicy:
     automated:
       prune: false
