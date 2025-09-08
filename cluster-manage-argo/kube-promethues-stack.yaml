@@ -1,0 +1,33 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: kube-prometheus-stack
+spec:
+  destination:
+    namespace: monitoring
+    server: https://kubernetes.default.svc
+  source:
+    path: ''
+    repoURL: https://prometheus-community.github.io/helm-charts
+    targetRevision: 77.5.0
+    chart: kube-prometheus-stack
+    helm:
+      values: |
+        alertmanager:
+          ingress:
+            enabled: 'true'
+        grafana:
+          ingress:
+            enabled: 'true'
+        prometheus:
+          ingress:
+            enabled: 'true'
+  sources: []
+  project: default
+  syncPolicy:
+    automated:
+      prune: false
+      selfHeal: false
+      enabled: true
+    syncOptions:
+      - CreateNamespace=true
