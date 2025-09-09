@@ -8,7 +8,6 @@ module "eks" {
 
   name               = local.cluster_name
   kubernetes_version = var.cluster_version
-  depends_on = [ module.vpc ]
 
   addons = {
     coredns = {
@@ -59,17 +58,24 @@ module "eks" {
   subnet_ids = module.vpc.private_subnets
 
   eks_managed_node_groups = {
-    "calc_node_group" = {
+    "eks_node_group" = {
       ami_type       = "AL2023_x86_64_STANDARD"
-      instance_types = ["m5.xlarge"]
-      capacity_type  = "SPOT"
+      instance_types = ["m5.large"]
+      capacity_type  = "ON_DEMAND"
       desired_size   = 2
       min_size       = 1
       max_size       = 6
+      disk_size      = 50
     }
   }
 
-  tags = local.tags
+  tags = merge(
+    local.tags,
+    {
+      "k8s.io/cluster-autoscaler/${local.cluster_name}" = "owned"
+      "k8s.io/cluster-autoscaler/enabled"        = "true"
+    }
+  )
 }
 
 ###############################################################################
@@ -395,6 +401,18 @@ resource "helm_release" "autoscaler" {
       name  = "extraArgs.balance-similar-node-groups"
       value = "true"
     },
+    {
+      name  = "extraArgs.scale-down-unneeded-time"
+      value = "10m"
+    },
+    {
+      name  = "extraArgs.scale-down-utilization-threshold"
+      value = "0.5"
+    },
+    {
+      name  = "extraArgs.expander"
+      value = "least-waste"
+    },
   ]
 }
 
@@ -411,7 +429,7 @@ resource "helm_release" "metrics_server" {
   lint       = true
 
   create_namespace = true
-  namespace        = "metric-server"
+  namespace        = "metrics-server"
   wait             = true
 
   depends_on = [
