@@ -66,6 +66,19 @@ module "eks" {
       min_size       = 1
       max_size       = 6
       disk_size      = 50
+      block_device_mappings = {
+        root_volume = {
+          device_name = "/dev/xvda"
+          ebs = {
+            delete_on_termination = true
+            encrypted = false
+            iops = 3000
+            throughput = 125
+            volume_size = 50 # optional
+            volume_type = "gp3" # optional
+          }
+        }
+      }
     }
   }
 
@@ -184,7 +197,7 @@ resource "helm_release" "external_dns" {
   wait             = true
 
   depends_on = [
-    module.eks.eks_managed_node_groups
+    module.eks
   ]
 
   set = [
@@ -243,7 +256,7 @@ resource "helm_release" "cert_manager_controller" {
 
   depends_on = [
     module.cert_manager_irsa,
-    module.eks.eks_managed_node_groups
+    module.eks
   ]
 
   set = [
@@ -297,7 +310,7 @@ resource "helm_release" "aws_load_balancer_controller" {
 
   depends_on = [
     module.aws_load_balancer_controller_irsa,
-    module.eks.eks_managed_node_groups,
+    module.eks,
     helm_release.cert_manager_controller
   ]
   set = [
@@ -376,8 +389,7 @@ resource "helm_release" "autoscaler" {
   wait             = true
 
   depends_on = [
-    module.eks.eks_managed_node_groups,
-    module.eks.addons,
+    module.eks,
     module.cluster_autoscaler_irsa
   ]
   set = [
@@ -433,7 +445,7 @@ resource "helm_release" "metrics_server" {
   wait             = true
 
   depends_on = [
-    module.eks.eks_managed_node_groups,
+    module.eks
   ]
 
   set = [
@@ -448,6 +460,6 @@ resource "helm_release" "metrics_server" {
     # {
     #   name = "args"
     #   value = ""
-    # }
+    # },
   ]
 }
